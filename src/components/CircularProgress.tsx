@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react';
-import type { VerdictType } from '@/hooks/useAuditScore';
 
-interface CircularProgressProps {
+export type VerdictType = 'critical' | 'warning' | 'success';
+
+export interface CircularProgressProps {
   percentage: number;
-  verdictType: VerdictType;
+  verdict: VerdictType;
   size?: number;
   strokeWidth?: number;
 }
 
 export function CircularProgress({
   percentage,
-  verdictType,
+  verdict,
   size = 200,
   strokeWidth = 12,
 }: CircularProgressProps) {
@@ -28,7 +29,7 @@ export function CircularProgress({
   }, [percentage]);
 
   const getStrokeColor = () => {
-    switch (verdictType) {
+    switch (verdict) {
       case 'critical':
         return 'hsl(var(--destructive))';
       case 'warning':
@@ -41,7 +42,7 @@ export function CircularProgress({
   };
 
   const getGlowColor = () => {
-    switch (verdictType) {
+    switch (verdict) {
       case 'critical':
         return 'drop-shadow(0 0 20px hsl(var(--destructive) / 0.5))';
       case 'warning':

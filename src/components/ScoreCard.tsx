@@ -1,7 +1,12 @@
-import { CircularProgress } from './CircularProgress';
+import { CircularProgress, VerdictType } from './CircularProgress';
 import { AlertTriangle, CheckCircle2, XCircle, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import type { Verdict, VerdictType } from '@/hooks/useAuditScore';
+
+interface Verdict {
+  type: VerdictType;
+  title: string;
+  description: string;
+}
 
 interface ScoreCardProps {
   percentage: number;
@@ -51,7 +56,7 @@ export function ScoreCard({ percentage, checkedCount, totalCount, verdict }: Sco
 
       {/* Circular Progress */}
       <div className="flex justify-center py-4">
-        <CircularProgress percentage={percentage} verdictType={verdict.type} />
+        <CircularProgress percentage={percentage} verdict={verdict.type} />
       </div>
 
       {/* Verdict Card */}
