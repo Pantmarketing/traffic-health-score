@@ -60,7 +60,6 @@ const AuditDetail = () => {
     return { label: "Refém", color: "text-red-500", icon: ShieldAlert, bg: "bg-red-500/10" };
   };
 
-  // A pontuação agora é relativa ao número de riscos.
   const risk = getRiskLevel(audit.score, audit.risks.length);
 
   return (
@@ -85,21 +84,30 @@ const AuditDetail = () => {
             <div className="grid gap-6">
               {audit.risks.length > 0 ? (
                 audit.risks.map((riskItem, index) => {
-                  const [excuse, reality] = riskItem.description.split('###');
-                  const severity = audit.score < 50 ? 'high' : 'medium'; // Lógica de severidade
+                  const severity = audit.score < 50 ? 'high' : 'medium';
+                  const hasSeparator = riskItem.description.includes('###');
 
                   return (
                     <Card key={index} className="bg-[#1A1F2C] border-white/10 overflow-hidden flex flex-col">
                        <div className="p-6">
                         <h3 className="text-lg font-bold text-primary mb-4">{riskItem.title}</h3>
-                        <div className="mb-4">
-                            <p className="text-sm text-gray-400 font-bold mb-2">DESCULPA COMUM:</p>
-                            <p className='text-gray-300'>{excuse.replace('Desculpa Comum: ','')}</p>
-                        </div>
-                        <div>
-                            <p className="text-sm text-green-400 font-bold mb-2">VEREDITO TÉCNICO:</p>
-                            <p className='text-gray-300'>{reality.replace('Veredito Técnico: ','')}</p>
-                        </div>
+                        {hasSeparator ? (
+                            <>
+                                <div className="mb-4">
+                                    <p className="text-sm text-gray-400 font-bold mb-2">DESCULPA COMUM:</p>
+                                    <p className='text-gray-300'>{riskItem.description.split('###')[0].replace('Desculpa Comum: ','')}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-green-400 font-bold mb-2">VEREDITO TÉCNICO:</p>
+                                    <p className='text-gray-300'>{riskItem.description.split('###')[1].replace('Veredito Técnico: ','')}</p>
+                                </div>
+                            </>
+                        ) : (
+                            <div>
+                                <p className="text-sm text-gray-400 font-bold mb-2">DESCRIÇÃO:</p>
+                                <p className='text-gray-300'>{riskItem.description}</p>
+                            </div>
+                        )}
                       </div>
                       <div className={cn(
                         "w-full h-2 mt-auto",
