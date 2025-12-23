@@ -1,207 +1,122 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Calendar, Zap, Shield, Target, Search, DollarSign, Check, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
-import { questionGroups, getFilteredGroups } from '@/data/questions';
-import { CircularProgress } from '@/components/CircularProgress';
-import type { Audit } from '@/hooks/useAudits';
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { ActionPlan } from "@/data/questions";
+import { Header } from "@/components/Header";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { AlertTriangle, CheckCircle, ShieldAlert, MessageSquare } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const iconMap = {
-  shield: Shield,
-  meta: Target,
-  google: Search,
-  dollar: DollarSign,
-};
+interface AuditData {
+  score: number;
+  risks: ActionPlan[];
+  createdAt: any;
+}
 
-export default function AuditDetail() {
-  const { id } = useParams<{ id: string }>();
-  const { user, loading: authLoading } = useAuth();
+const AuditDetail = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
-  const [audit, setAudit] = useState<Audit | null>(null);
+  const [audit, setAudit] = useState<AuditData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth');
-    }
-  }, [user, authLoading, navigate]);
-
-  useEffect(() => {
     const fetchAudit = async () => {
-      if (!id || !user) return;
-
-      const { data, error } = await supabase
-        .from('audits')
-        .select('*')
-        .eq('id', id)
-        .maybeSingle();
-
-      if (error || !data) {
-        navigate('/dashboard');
-        return;
+      if (!id) return;
+      try {
+        const docRef = doc(db, "audits", id);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setAudit(docSnap.data() as AuditData);
+        } else {
+          navigate("/dashboard");
+        }
+      } catch (error) {
+        console.error("Error fetching audit:", error);
+      } finally {
+        setLoading(false);
       }
-
-      setAudit(data as Audit);
-      setLoading(false);
     };
 
-    if (user) {
-      fetchAudit();
-    }
-  }, [id, user, navigate]);
+    fetchAudit();
+  }, [id, navigate]);
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-muted-foreground">Carregando...</div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   if (!audit) return null;
 
-  const filteredGroups = getFilteredGroups(audit.channels);
-  const verdict = audit.score < 60 
-    ? { label: 'CRÍTICO', color: 'text-destructive', bg: 'bg-destructive/10 border-destructive/20' }
-    : audit.score < 85 
-    ? { label: 'ATENÇÃO', color: 'text-warning', bg: 'bg-warning/10 border-warning/20' }
-    : { label: 'BLINDADO', color: 'text-success', bg: 'bg-success/10 border-success/20' };
+  const getRiskLevel = (score: number) => {
+    if (score === 0) return { label: "Baixo", color: "text-green-500", icon: CheckCircle, bg: "bg-green-500/10" };
+    if (score === 1) return { label: "Médio", color: "text-yellow-500", icon: AlertTriangle, bg: "bg-yellow-500/10" };
+    return { label: "Refém", color: "text-red-500", icon: ShieldAlert, bg: "bg-red-500/10" };
+  };
+
+  const risk = getRiskLevel(audit.score);
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            Voltar
-          </button>
-
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/20 border border-primary/30">
-              <Zap className="w-5 h-5 text-primary" />
-            </div>
-            <span className="text-lg font-bold tracking-wider text-foreground">
-              {audit.project_name}
-            </span>
+      <Header />
+      <main className="container max-w-3xl pt-24 pb-12">
+        <div className="text-center mb-12">
+          <h1 className="text-3xl font-bold text-white mb-4">Seu Diagnóstico de Tráfego</h1>
+          <div className={cn("inline-flex items-center gap-2 px-6 py-3 rounded-full border", risk.bg, risk.color, "border-current/20")}>
+            <risk.icon className="w-6 h-6" />
+            <span className="text-xl font-bold uppercase tracking-wider">Nível de Risco: {risk.label}</span>
           </div>
-
-          <div className="w-20" />
         </div>
-      </header>
 
-      {/* Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Score Card */}
-          <div className="lg:col-span-1">
-            <div className="glass-card p-8 sticky top-24">
-              <div className="flex flex-col items-center">
-                <CircularProgress
-                  percentage={audit.score}
-                  verdict={audit.score < 60 ? 'critical' : audit.score < 85 ? 'warning' : 'success'}
-                />
-
-                <div className={`mt-6 px-4 py-2 rounded-full border ${verdict.bg}`}>
-                  <span className={`font-bold ${verdict.color}`}>
-                    {verdict.label}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground">
-                  <Calendar className="w-4 h-4" />
-                  {new Date(audit.created_at).toLocaleDateString('pt-BR')}
-                </div>
-
-                <div className="flex gap-2 mt-4">
-                  {audit.channels.map((channel) => (
-                    <span
-                      key={channel}
-                      className="text-xs px-2 py-1 rounded bg-secondary/50 text-muted-foreground capitalize"
-                    >
-                      {channel === 'meta' ? 'Meta Ads' : 'Google Ads'}
-                    </span>
-                  ))}
-                </div>
-
-                {audit.score < 85 && (
-                  <Button className="mt-8 w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
-                    SOLICITAR ANÁLISE
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Checklist Details */}
-          <div className="lg:col-span-2 space-y-6">
-            {filteredGroups.map((group, index) => {
-              const Icon = iconMap[group.icon];
-              const approvedCount = group.questions.filter(
-                (q) => audit.answers[q.id]
-              ).length;
-
-              return (
-                <div
-                  key={group.id}
-                  className="glass-card p-6 animate-fade-in"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 rounded-lg bg-primary/10 border border-primary/20">
-                        <Icon className="w-5 h-5 text-primary" />
-                      </div>
-                      <h3 className="font-semibold text-foreground text-lg">
-                        {group.title}
-                      </h3>
+        <div className="space-y-8">
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+              <ShieldAlert className="text-primary" />
+              Plano de Ação Imediato
+            </h2>
+            
+            <div className="grid gap-4">
+              {audit.risks.length > 0 ? (
+                audit.risks.map((riskItem, index) => (
+                  <Card key={index} className="bg-[#1A1F2C] border-none overflow-hidden flex">
+                    <div className={cn(
+                      "w-2",
+                      riskItem.severity === 'high' ? "bg-red-500" : "bg-yellow-500"
+                    )} />
+                    <div className="p-6">
+                      <h3 className="text-lg font-bold text-white mb-2">{riskItem.title}</h3>
+                      <p className="text-gray-400 leading-relaxed">{riskItem.description}</p>
                     </div>
-                    <span className="text-sm text-muted-foreground">
-                      {approvedCount}/{group.questions.length}
-                    </span>
-                  </div>
+                  </Card>
+                ))
+              ) : (
+                <Card className="p-8 text-center bg-green-500/5 border-green-500/20">
+                  <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-white mb-2">Sua agência está aprovada!</h3>
+                  <p className="text-gray-400">Não encontramos riscos críticos na sua operação atual.</p>
+                </Card>
+              )}
+            </div>
+          </section>
 
-                  <div className="space-y-3">
-                    {group.questions.map((question) => {
-                      const isChecked = audit.answers[question.id];
-                      return (
-                        <div
-                          key={question.id}
-                          className={`flex items-center justify-between py-3 px-4 rounded-lg transition-colors ${
-                            isChecked
-                              ? 'bg-success/10 border border-success/20'
-                              : 'bg-destructive/10 border border-destructive/20'
-                          }`}
-                        >
-                          <span className="text-sm text-foreground">
-                            {question.label}
-                          </span>
-                          <div
-                            className={`p-1 rounded-full ${
-                              isChecked ? 'bg-success/20' : 'bg-destructive/20'
-                            }`}
-                          >
-                            {isChecked ? (
-                              <Check className="w-4 h-4 text-success" />
-                            ) : (
-                              <X className="w-4 h-4 text-destructive" />
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <Card className="p-8 glass-card border-primary/20 text-center">
+            <h3 className="text-2xl font-bold text-white mb-4">Precisa recuperar o controle do seu lucro?</h3>
+            <p className="text-gray-400 mb-8 max-w-md mx-auto">
+              Nossos especialistas podem analisar seu caso individualmente e ajudar na implementação dos protocolos de segurança.
+            </p>
+            <Button size="lg" className="bg-primary hover:bg-primary/90 text-white font-bold h-14 px-8">
+              <MessageSquare className="mr-2 h-5 w-5" />
+              SOLICITAR AJUDA DO ESPECIALISTA
+            </Button>
+          </Card>
         </div>
       </main>
     </div>
   );
-}
+};
+
+export default AuditDetail;

@@ -1,21 +1,38 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, User, Zap } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useAuth } from '@/hooks/useAuth';
-import { toast } from 'sonner';
+import { Zap, User, Mail, Lock } from 'lucide-react';
+
+const signUpSchema = z.object({
+  name: z.string().min(3, { message: 'Nome precisa de 3+ caracteres' }),
+  email: z.string().email({ message: 'E-mail inválido' }),
+  password: z.string().min(6, { message: 'Senha precisa de 6+ caracteres' }),
+});
+
+const signInSchema = z.object({
+  email: z.string().email({ message: 'E-mail inválido' }),
+  password: z.string().min(1, { message: 'Senha é obrigatória' }),
+});
 
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const { user, signIn, signUp } = useAuth();
+  const [isSignUp, setIsSignUp] = useState(true);
   const navigate = useNavigate();
+  const { user, signIn, signUp, loading } = useAuth();
+
+  const form = useForm({
+    resolver: zodResolver(isSignUp ? signUpSchema : signInSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      password: '',
+    },
+  });
 
   useEffect(() => {
     if (user) {
@@ -23,152 +40,108 @@ export default function Auth() {
     }
   }, [user, navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+  const onSubmit = async (values: any) => {
+    const { email, password, name } = values;
+    let error;
 
-    if (!email || !password) {
-      toast.error('Preencha todos os campos');
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (password.length < 6) {
-      toast.error('A senha deve ter pelo menos 6 caracteres');
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (isLogin) {
-      const { error } = await signIn(email, password);
-      if (error) {
-        if (error.message.includes('Invalid login credentials')) {
-          toast.error('Email ou senha incorretos');
-        } else {
-          toast.error(error.message);
-        }
-      } else {
-        toast.success('Login realizado com sucesso!');
-        navigate('/dashboard');
-      }
+    if (isSignUp) {
+      const result = await signUp(email, password, name);
+      error = result.error;
     } else {
-      if (!fullName) {
-        toast.error('Preencha seu nome completo');
-        setIsSubmitting(false);
-        return;
-      }
-      const { error } = await signUp(email, password, fullName);
-      if (error) {
-        if (error.message.includes('already registered')) {
-          toast.error('Este email já está cadastrado');
-        } else {
-          toast.error(error.message);
-        }
-      } else {
-        toast.success('Conta criada com sucesso!');
-        navigate('/dashboard');
-      }
+      const result = await signIn(email, password);
+      error = result.error;
     }
 
-    setIsSubmitting(false);
+    if (error) {
+      console.error("Firebase Error:", error);
+      toast.error('Falha na autenticação', {
+        description: getFirebaseErrorMessage(error),
+      });
+    } else {
+      toast.success(isSignUp ? 'Conta criada com sucesso!' : 'Bem-vindo de volta!');
+      navigate('/dashboard');
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground">Carregando...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="p-2.5 rounded-lg bg-primary/20 border border-primary/30">
-            <Zap className="w-6 h-6 text-primary" />
-          </div>
-          <span className="text-xl font-bold tracking-wider text-foreground">
-            TRAFFIC <span className="text-primary">INTELLIGENCE</span>
-          </span>
+      <div className="w-full max-w-md mx-auto">
+        <div className="flex items-center gap-3 mb-8 justify-center">
+            <div className="p-2 rounded-lg bg-primary/20 border border-primary/30">
+              <Zap className="w-5 h-5 text-primary" />
+            </div>
+            <span className="text-lg font-bold tracking-wider text-foreground">
+              TRAFFIC <span className="text-primary">INTELLIGENCE</span>
+            </span>
         </div>
 
-        {/* Card */}
         <div className="glass-card p-8">
-          <h2 className="text-2xl font-bold text-foreground text-center mb-2">
-            {isLogin ? 'Bem-vindo de volta' : 'Criar conta'}
+          <h2 className="text-2xl font-bold text-center text-foreground">
+            {isSignUp ? 'Criar conta' : 'Acessar conta'}
           </h2>
-          <p className="text-muted-foreground text-center mb-8">
-            {isLogin
-              ? 'Entre para acessar suas auditorias'
-              : 'Comece a auditar suas campanhas'}
+          <p className="text-muted-foreground text-center mt-2 mb-6">
+            {isSignUp ? 'Comece a auditar suas campanhas' : 'Bem-vindo de volta'}
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {isSignUp && (
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Nome completo"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="pl-10 bg-secondary/50 border-border/50 focus:border-primary"
-                />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input placeholder="Nome completo" {...form.register('name')} className="pl-9" />
+                {form.formState.errors.name && <p className='text-xs text-destructive mt-1'>{String(form.formState.errors.name.message)}</p>}
               </div>
             )}
-
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="pl-10 bg-secondary/50 border-border/50 focus:border-primary"
-              />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input placeholder="E-mail" {...form.register('email')} className="pl-9" />
+              {form.formState.errors.email && <p className='text-xs text-destructive mt-1'>{String(form.formState.errors.email.message)}</p>}
+            </div>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input type="password" placeholder="Senha" {...form.register('password')} className="pl-9" />
+              {form.formState.errors.password && <p className='text-xs text-destructive mt-1'>{String(form.formState.errors.password.message)}</p>}
             </div>
 
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Senha"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="pl-10 pr-10 bg-secondary/50 border-border/50 focus:border-primary"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {showPassword ? (
-                  <EyeOff className="w-5 h-5" />
-                ) : (
-                  <Eye className="w-5 h-5" />
-                )}
-              </button>
-            </div>
-
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-6"
-            >
-              {isSubmitting
-                ? 'Carregando...'
-                : isLogin
-                ? 'Entrar'
-                : 'Criar conta'}
+            <Button type="submit" className="w-full font-semibold" disabled={form.formState.isSubmitting}>
+              {isSignUp ? 'Criar minha conta' : 'Entrar'}
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-muted-foreground hover:text-primary transition-colors text-sm"
-            >
-              {isLogin
-                ? 'Não tem conta? Criar agora'
-                : 'Já tem conta? Fazer login'}
+          <p className="text-center text-sm text-muted-foreground mt-6">
+            {isSignUp ? 'Já tem uma conta?' : 'Não tem uma conta?'}{' '}
+            <button onClick={() => setIsSignUp(!isSignUp)} className="text-primary font-semibold hover:underline">
+              {isSignUp ? 'Faça login' : 'Crie uma conta'}
             </button>
-          </div>
+          </p>
         </div>
       </div>
     </div>
   );
+}
+
+function getFirebaseErrorMessage(error: any) {
+  switch (error.code) {
+    case 'auth/invalid-email':
+      return 'O formato do e-mail é inválido.';
+    case 'auth/email-already-in-use':
+      return 'Este e-mail já está sendo usado por outra conta.';
+    case 'auth/weak-password':
+      return 'A senha é muito fraca. Use pelo menos 6 caracteres.';
+    case 'auth/user-not-found':
+    case 'auth/wrong-password':
+      return 'E-mail ou senha incorretos.';
+    case 'auth/configuration-not-found':
+    case 'auth/invalid-api-key':
+       return 'Erro de configuração do Firebase. Verifique as chaves no .env e reinicie o servidor.'
+    default:
+      return 'Ocorreu um erro inesperado. Tente novamente.';
+  }
 }
