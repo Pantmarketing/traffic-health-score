@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { db } from "@/lib/firebase";
@@ -52,13 +53,15 @@ const AuditDetail = () => {
 
   if (!audit) return null;
 
-  const getRiskLevel = (score: number) => {
-    if (score === 0) return { label: "Baixo", color: "text-green-500", icon: CheckCircle, bg: "bg-green-500/10" };
-    if (score === 1) return { label: "Médio", color: "text-yellow-500", icon: AlertTriangle, bg: "bg-yellow-500/10" };
+  const getRiskLevel = (score: number, totalQuestions: number) => {
+    const percentage = totalQuestions > 0 ? (score / totalQuestions) * 100 : 0;
+    if (percentage < 30) return { label: "Baixo", color: "text-green-500", icon: CheckCircle, bg: "bg-green-500/10" };
+    if (percentage < 60) return { label: "Médio", color: "text-yellow-500", icon: AlertTriangle, bg: "bg-yellow-500/10" };
     return { label: "Refém", color: "text-red-500", icon: ShieldAlert, bg: "bg-red-500/10" };
   };
 
-  const risk = getRiskLevel(audit.score);
+  // A pontuação agora é relativa ao número de riscos.
+  const risk = getRiskLevel(audit.score, audit.risks.length);
 
   return (
     <div className="min-h-screen bg-background">
@@ -79,20 +82,32 @@ const AuditDetail = () => {
               Plano de Ação Imediato
             </h2>
             
-            <div className="grid gap-4">
+            <div className="grid gap-6">
               {audit.risks.length > 0 ? (
-                audit.risks.map((riskItem, index) => (
-                  <Card key={index} className="bg-[#1A1F2C] border-none overflow-hidden flex">
-                    <div className={cn(
-                      "w-2",
-                      riskItem.severity === 'high' ? "bg-red-500" : "bg-yellow-500"
-                    )} />
-                    <div className="p-6">
-                      <h3 className="text-lg font-bold text-white mb-2">{riskItem.title}</h3>
-                      <p className="text-gray-400 leading-relaxed">{riskItem.description}</p>
-                    </div>
-                  </Card>
-                ))
+                audit.risks.map((riskItem, index) => {
+                  const [excuse, reality] = riskItem.description.split('###');
+                  const severity = audit.score < 50 ? 'high' : 'medium'; // Lógica de severidade
+
+                  return (
+                    <Card key={index} className="bg-[#1A1F2C] border-white/10 overflow-hidden flex flex-col">
+                       <div className="p-6">
+                        <h3 className="text-lg font-bold text-primary mb-4">{riskItem.title}</h3>
+                        <div className="mb-4">
+                            <p className="text-sm text-gray-400 font-bold mb-2">DESCULPA COMUM:</p>
+                            <p className='text-gray-300'>{excuse.replace('Desculpa Comum: ','')}</p>
+                        </div>
+                        <div>
+                            <p className="text-sm text-green-400 font-bold mb-2">VEREDITO TÉCNICO:</p>
+                            <p className='text-gray-300'>{reality.replace('Veredito Técnico: ','')}</p>
+                        </div>
+                      </div>
+                      <div className={cn(
+                        "w-full h-2 mt-auto",
+                        severity === 'high' ? "bg-red-500" : "bg-yellow-500"
+                      )} />
+                    </Card>
+                  )
+                })
               ) : (
                 <Card className="p-8 text-center bg-green-500/5 border-green-500/20">
                   <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
@@ -104,13 +119,13 @@ const AuditDetail = () => {
           </section>
 
           <Card className="p-8 glass-card border-primary/20 text-center">
-            <h3 className="text-2xl font-bold text-white mb-4">Precisa recuperar o controle do seu lucro?</h3>
-            <p className="text-gray-400 mb-8 max-w-md mx-auto">
-              Nossos especialistas podem analisar seu caso individualmente e ajudar na implementação dos protocolos de segurança.
+            <h3 className="text-2xl font-bold text-white mb-4">Pronto para implementar um sistema de tráfego inteligente?</h3>
+            <p className="text-gray-400 mb-8 max-w-lg mx-auto">
+              Sua operação pode ser refém de uma gestão técnica defasada. Nossos especialistas podem construir a arquitetura de sinais ideal para o seu negócio e destravar seu lucro.
             </p>
             <Button size="lg" className="bg-primary hover:bg-primary/90 text-white font-bold h-14 px-8">
               <MessageSquare className="mr-2 h-5 w-5" />
-              SOLICITAR AJUDA DO ESPECIALISTA
+              SOLICITAR AUDITORIA DE INTELIGÊNCIA AO VIVO
             </Button>
           </Card>
         </div>
