@@ -20,9 +20,9 @@ interface EnrichedRisk {
 
 interface AuditData {
   score: number;
-  risks: (ActionPlan | EnrichedRisk)[]; 
+  risks: (ActionPlan | EnrichedRisk)[];
   totalQuestions: number;
-  createdAt: any;
+  createdAt?: Date;
 }
 
 // --- Telas e Componentes --- //
@@ -201,7 +201,7 @@ const AuditDetail = () => {
                 .text-yellow-400 { color: #F59E0B !important; }
                 .text-orange-400 { color: #F97316 !important; }
                 .text-red-400 { color: #EF4444 !important; }
-                .border-white\/10, .border-l-2 { border-color: #d1d5db !important; }
+                .border-white/10, .border-l-2 { border-color: #d1d5db !important; }
             }
         `}</style>
       <Header className="no-print" />
