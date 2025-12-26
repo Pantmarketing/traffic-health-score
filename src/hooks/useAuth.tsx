@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useState, useEffect, createContext, useContext } from 'react';
 import { 
   User, 
@@ -13,8 +14,8 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signOut: () => Promise<void>;
-  signIn: (email: string, pass: string) => Promise<{ error?: any }>;
-  signUp: (email: string, pass: string, name: string) => Promise<{ error?: any }>;
+  signIn: (email: string, pass: string) => Promise<{ error?: unknown }>;
+  signUp: (email: string, pass: string, name: string) => Promise<{ error?: unknown }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
