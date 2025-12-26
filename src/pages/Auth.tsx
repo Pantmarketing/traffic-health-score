@@ -9,6 +9,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Zap, User, Mail, Lock } from 'lucide-react';
 
+type AuthFormValues = {
+  name: string;
+  email: string;
+  password: string;
+};
+
+type FirebaseAuthError = {
+  code?: string;
+};
+
 const signUpSchema = z.object({
   name: z.string().min(3, { message: 'Nome precisa de 3+ caracteres' }),
   email: z.string().email({ message: 'E-mail inválido' }),
@@ -25,7 +35,7 @@ export default function Auth() {
   const navigate = useNavigate();
   const { user, signIn, signUp, loading } = useAuth();
 
-  const form = useForm({
+  const form = useForm<AuthFormValues>({
     resolver: zodResolver(isSignUp ? signUpSchema : signInSchema),
     defaultValues: {
       name: '',
@@ -40,7 +50,7 @@ export default function Auth() {
     }
   }, [user, navigate]);
 
-  const onSubmit = async (values: any) => {
+  const onSubmit = async (values: AuthFormValues) => {
     const { email, password, name } = values;
     let error;
 
@@ -127,21 +137,27 @@ export default function Auth() {
   );
 }
 
-function getFirebaseErrorMessage(error: any) {
-  switch (error.code) {
-    case 'auth/invalid-email':
-      return 'O formato do e-mail é inválido.';
-    case 'auth/email-already-in-use':
-      return 'Este e-mail já está sendo usado por outra conta.';
-    case 'auth/weak-password':
-      return 'A senha é muito fraca. Use pelo menos 6 caracteres.';
-    case 'auth/user-not-found':
-    case 'auth/wrong-password':
-      return 'E-mail ou senha incorretos.';
-    case 'auth/configuration-not-found':
-    case 'auth/invalid-api-key':
-       return 'Erro de configuração do Firebase. Verifique as chaves no .env e reinicie o servidor.'
-    default:
-      return 'Ocorreu um erro inesperado. Tente novamente.';
+function getFirebaseErrorMessage(error: unknown) {
+  if (typeof error === 'object' && error !== null && 'code' in error) {
+    const { code } = error as FirebaseAuthError;
+
+    switch (code) {
+      case 'auth/invalid-email':
+        return 'O formato do e-mail é inválido.';
+      case 'auth/email-already-in-use':
+        return 'Este e-mail já está sendo usado por outra conta.';
+      case 'auth/weak-password':
+        return 'A senha é muito fraca. Use pelo menos 6 caracteres.';
+      case 'auth/user-not-found':
+      case 'auth/wrong-password':
+        return 'E-mail ou senha incorretos.';
+      case 'auth/configuration-not-found':
+      case 'auth/invalid-api-key':
+        return 'Erro de configuração do Firebase. Verifique as chaves no .env e reinicie o servidor.';
+      default:
+        return 'Ocorreu um erro inesperado. Tente novamente.';
+    }
   }
+
+  return 'Ocorreu um erro inesperado. Tente novamente.';
 }

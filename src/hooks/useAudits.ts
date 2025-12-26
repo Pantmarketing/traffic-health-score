@@ -1,29 +1,38 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { collection, query, where, getDocs, deleteDoc, doc, type DocumentData } from "firebase/firestore";
 import { useAuth } from "./useAuth";
+
+type Audit = {
+  id: string;
+  created_at: Date;
+  project_name: string;
+  channels: unknown[];
+} & DocumentData;
 
 export const useAudits = () => {
   const { user } = useAuth();
-  const [audits, setAudits] = useState<any[]>([]);
+  const [audits, setAudits] = useState<Audit[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchAudits = async () => {
+  const fetchAudits = useCallback(async () => {
     if (!user) return;
     try {
-      const q = query(
-        collection(db, "audits"),
-        where("userId", "==", user.uid)
-      );
-      const querySnapshot = await getDocs(q);
-      const auditsData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        // Normalização básica para o Dashboard não quebrar
-        created_at: doc.data().createdAt?.toDate() || new Date(),
-        project_name: "Auditoria de Tráfego",
-        channels: []
-      }));
+      const auditsQuery = query(collection(db, "audits"), where("userId", "==", user.uid));
+      const querySnapshot = await getDocs(auditsQuery);
+      const auditsData: Audit[] = querySnapshot.docs.map(docSnapshot => {
+        const data = docSnapshot.data();
+        const createdAt = (data.createdAt as { toDate?: () => Date } | undefined)?.toDate?.() ?? new Date();
+
+        return {
+          id: docSnapshot.id,
+          ...data,
+          // Normalização básica para o Dashboard não quebrar
+          created_at: createdAt,
+          project_name: "Auditoria de Tráfego",
+          channels: Array.isArray(data.channels) ? data.channels : [],
+        };
+      });
       auditsData.sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
       setAudits(auditsData);
     } catch (error) {
@@ -31,11 +40,11 @@ export const useAudits = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchAudits();
-  }, [user]);
+  }, [fetchAudits]);
 
   const deleteAudit = async (id: string) => {
     try {
