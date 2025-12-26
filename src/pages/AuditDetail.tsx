@@ -83,90 +83,93 @@ const DiagnosisExplanation = ({ health }) => (
 );
 
 // Seção acionável com base nos pontos cegos
+const actionableQuestionMap: Record<string, string> = {
+  // Bloco 1: E-commerce e Gestão (Simples e Direto)
+  "Consistência de Dados": "No seu relatório as vendas estão ótimas, mas no meu banco caiu muito menos. Por que o rastreio de vocês está tão longe da minha realidade?",
+  "Teto de Escala": "Sempre que eu peço para investir mais, o lucro some porque a venda fica cara demais. A conta está mal organizada ou chegamos no teto?",
+  "O Medo da Escala": "Por que o preço de cada lead dobra quando tentamos investir mais? O nosso público é tão pequeno assim ou a conta está desorganizada e sobreposta?",
+  "Vida Útil do Criativo": "Vocês pedem vídeo novo toda semana dizendo que o público cansou. O problema é o vídeo ou vocês não estão testando títulos e textos diferentes para o mesmo vídeo?",
+  "Fadiga de Criativos": "Vocês pedem vídeos novos quase todo dia. O problema é o meu vídeo ou vocês não estão testando textos e títulos diferentes para o mesmo vídeo antes de descartar?",
+  "Qualidade do Carrinho": "Tem muita gente colocando produto no carrinho e não comprando. Os anúncios estão atraindo compradores de verdade ou só gente curiosa que não tem dinheiro?",
+  "Re-compra Inexistente": "Eu e meus clientes estamos vendo nossos próprios anúncios de venda. Por que estou pagando para anunciar para quem já é meu cliente em vez de buscar gente nova?",
+  "Canibalização de Marca": "A maioria das vendas do Google vem de quem digitou o nome da minha loja. Eu não estou pagando por um cliente que já ia me achar de graça no orgânico?",
+  "Higiene de Termos de Busca": "Vi que estamos pagando por cliques de quem busca 'coisa grátis' ou 'PDF'. Como vocês estão limpando essas palavras para eu parar de dar dinheiro para quem não quer comprar?",
+  "Lixo em Termos de Busca": "Vi que estamos aparecendo para palavras como 'grátis' ou 'vagas de emprego'. Por que estamos jogando dinheiro fora com esses cliques que não compram?",
+  "Ponto Cego da PMax": "Onde exatamente nossos anúncios estão aparecendo? Não quero meu dinheiro indo para sites de fofoca ou aplicativos de jogos infantis.",
+  "Ponto Cego da Rede de Display": "Onde exatamente nossos anúncios estão aparecendo? Não quero meu dinheiro indo para sites de fofoca ou aplicativos de jogos infantis.",
+  "Ponto Cego do YouTube e Display": "Vi meu anúncio em um site de joguinhos e em canais infantis no YouTube. Por que meu dinheiro está indo para lá se o meu cliente é um adulto/decisor?",
+  "Eficiência de Margem": "O faturamento no relatório está alto, mas no final do mês não sobra dinheiro. Podemos ajustar os anúncios para focar em lucro real e não só em volume de vendas?",
+  "Saúde do Merchant Center": "Notei que vários produtos estão fora do ar no Google Shopping por erro técnico. Quem está cuidando para que o anúncio não pare por bobeira de preço ou estoque?",
+  "Propriedade de Dados (Sequestro de Ativos)": "Se a gente parar de trabalhar hoje, as contas de anúncios e todo o histórico ficam comigo ou estão no nome da agência? Quero ter certeza que o acesso é meu.",
+  "Origem da Venda (Atribuição)": "Quando sai uma venda aqui, eu não consigo saber de qual anúncio ela veio. Por que o rastreio não está configurado para me mostrar o que funciona?",
+  "Velocidade e Latência": "Sinto o site lento no celular. O quanto essa demora está fazendo eu perder vendas e deixando o anúncio mais caro para mim?",
+  "Janela de Decisão (Risco)": "Vocês desligam anúncios que não venderam em 24 horas. O cliente não leva alguns dias para decidir? Não estamos matando anúncios que dariam lucro depois?",
+  "Sincronia de Estoque": "Gastamos dinheiro anunciando um produto que já tinha acabado no estoque. Como vocês garantem que o anúncio pare na hora que o produto acabar?",
+  "Ponto Cego na Gestão": "Quem está auditando os números críticos? Se ninguém acompanha, como garantir que a agência não está no piloto automático?",
+
+  // Bloco 2: Serviços, Leads e Performance (Simples e Direto)
+  "Sincronia de Leads": "No Facebook diz que chegaram 100 leads, mas no meu WhatsApp só apareceram 60. Para onde foram os outros? Tem algum erro de ligação entre os sistemas?",
+  "Estresse de Escala": "Sempre que tento investir mais para vender mais ingressos ou vagas, o custo por venda dispara. Nossa conta está organizada para crescer ou estamos apenas saturando o mesmo público?",
+  "Fadiga de Abordagem": "Vocês dizem que o vídeo cansou, mas a mensagem é sempre a mesma. Não devíamos testar uma conversa ou oferta diferente antes de eu gastar tempo gravando tudo de novo?",
+  "Filtro de Curiosos": "Estão chegando muitos 'curiosos' que só fazem perder meu tempo. Podemos colocar alguma pergunta ou filtro no anúncio para barrar quem não tem perfil de compra?",
+  "Leads 'Zumbis'": "Os leads dizem que nunca preencheram nada. Estamos atraindo gente que clicou por engano em vez de quem realmente quer falar com a empresa?",
+  "Omissão de CRM": "Vocês sabem quais dos leads que vocês enviaram realmente fecharam contrato? Como vocês melhoram os anúncios se não sabem quem me deu lucro de verdade?",
+  "Poluição de Intenção": "Muitos leads do Google dizem que 'não preencheram nada'. Estamos aparecendo para quem quer coisa grátis ou para quem realmente quer contratar meu serviço?",
+  "Sequestro de Tráfego de Marca": "Estou pagando para aparecer quando buscam meu nome. Se eu parar, o cliente não me acharia no link gratuito logo abaixo? Não estamos jogando dinheiro fora com quem já me conhece?",
+  "Sequestro de Tráfego de Marca (Cegueira)": "Estou pagando para aparecer quando buscam meu nome. Se eu parar, o cliente não me acharia no link gratuito logo abaixo? Não estamos jogando dinheiro fora com quem já me conhece?",
+  "Estratégia de Lance Cega": "Estamos focados em 'ganhar cliques' ou em 'ganhar clientes'? De que adianta ter mil acessos no site se ninguém me chama no WhatsApp no final do dia?",
+  "Abismo da Página de Destino": "Se o problema de não vender é o meu site, por que vocês não me avisaram antes? O que exatamente eu preciso mudar na página para o anúncio de vocês funcionar?",
+  "Feedback Loop (Risco)": "Quando vamos sentar para eu te falar quais leads foram bons? Vocês precisam saber quem comprou para parar de gastar com o público que não fecha negócio.",
+  "Atribuição Forense (UTMs)": "Fechei um contrato ótimo hoje, mas não sei qual anúncio trouxe esse cliente. Como vamos investir mais no que funciona se não temos esse rastreio configurado?",
+  "Propriedade de Ativos (Sequestro)": "As contas de anúncios e o 'Pixel' estão no meu e-mail ou no de vocês? Quero garantir que, se a gente parar de trabalhar, o histórico de inteligência continue comigo.",
+  "Propriedade de Ativos (Risco)": "Se eu mudar de agência amanhã, eu perco a lista de todas as pessoas que já visitaram meu perfil ou site? Quero ter certeza que essa inteligência é minha e está na minha conta.",
+  "Latência de Carregamento": "Minha página de vendas demora para abrir no celular. Quantos clientes estamos perdendo no meio do caminho e quanto isso está encarecendo o meu anúncio?",
+  "Métrica de Sobrevivência (CAC)": "Vocês sabem até quanto eu posso pagar por um cliente para eu não ter prejuízo no final do mês? Como vocês controlam os lances sem saber a minha margem?",
+  "Taxonomia de UTMs": "Estamos etiquetando UTMs de forma consistente? Se cada campanha usa um padrão, como vamos saber de onde veio cada venda?",
+
+  // Bloco 3: Infoprodutos, Assinaturas e Eventos (Simples e Direto)
+  "Estresse de Escala": "Sempre que tento investir mais para vender mais ingressos ou vagas, o custo por venda dispara. Nossa conta está organizada para crescer ou estamos apenas saturando o mesmo público?",
+  "Eficiência de Remarketing": "Por que meus alunos ou assinantes ativos continuam vendo anúncios para comprar o que já têm? Não estamos jogando dinheiro fora por não excluir essas pessoas?",
+  "Fadiga de Ângulo": "Vocês estão apenas trocando a imagem ou estão testando novos motivos para a pessoa comprar? Mudar só a cor do botão não vai convencer quem ainda não comprou.",
+  "Janela de Decisão": "Vocês desligam anúncios que não venderam em 24h. Mas o cliente não leva uns dias para decidir assinar? Não estamos matando anúncios que trariam lucro depois?",
+  "Sinal de Conversão": "O Facebook sabe quem realmente pagou no PIX ou Boleto? Se ele só vê o clique no checkout e não o dinheiro no banco, ele vai continuar me trazendo quem não paga.",
+  "Sequestro de Marca": "Quase todas as vendas do Google vêm de quem já buscou pelo nome do meu produto. Por que estou pagando por esse cliente se ele já me conhecia e ia me achar de qualquer jeito?",
+  "Sequestro de Marca (Risco)": "Quase todas as vendas do Google vêm de quem já buscou pelo nome do meu produto. Por que estou pagando por esse cliente se ele já me conhecia e ia me achar de qualquer jeito?",
+  "Qualidade de Inscritos (OCI)": "Temos muitos inscritos 'grátis', mas ninguém vira aluno pago. Como estamos avisando ao Google para parar de buscar 'caçadores de brinde' e focar em quem tem dinheiro?",
+  "Estratégia de Lance em Picos": "Nos dias de encerramento, o custo por venda sobe tanto que o lucro some. Por que não colocamos um limite de preço para o Google não dar lances malucos no leilão?",
+  "Propriedade da Inteligência": "Se eu mudar de agência, eu perco as listas de quem visitou meu site ou se inscreveu nos eventos? Quem é o dono dessa 'inteligência' toda, eu ou vocês?",
+  "Atribuição de Jornada": "A venda veio do primeiro vídeo que a pessoa viu ou só do anúncio de 'última chance'? Se a gente não souber o caminho todo, vamos acabar pausando o que traz gente nova.",
+  "Saúde Técnica do Checkout": "A página de pagamento está demorando para abrir no celular. Vocês já testaram isso? Estou pagando pelo clique e perdendo o aluno no último segundo por causa de lentidão.",
+  "Estratégia de Equity (LTV/CAC)": "Vocês sabem quanto tempo um assinante fica pagando antes de cancelar? Quero anúncios que tragam clientes fiéis, e não gente que assina e sai no primeiro mês.",
+  "Visão de Valor de Vida (LTV)": "Vocês sabem quanto tempo um assinante fica pagando antes de cancelar? Quero anúncios que tragam clientes fiéis, e não gente que assina e sai no primeiro mês.",
+  "Resiliência de Sinais (Risco)": "Ouvi dizer que se o rastreio não for de alta qualidade, perdemos 30% dos dados de venda. Como está a 'nota' de qualidade dos nossos dados hoje?",
+  "Resiliência de Sinais (CAPI)": "Ouvi dizer que se o rastreio não for de alta qualidade, perdemos 30% dos dados de venda. Como está a 'nota' de qualidade dos nossos dados hoje?",
+  "Janela de Lucro": "Quando apertamos o orçamento, ainda estamos olhando lucro por venda ou só volume? Como vocês sabem se o lance cabe na minha margem em cada janela de oferta?",
+  "Qualidade da Base e Retenção": "Vocês sabem quanto tempo um assinante fica pagando antes de cancelar? Quero anúncios que tragam clientes fiéis, e não gente que assina e sai no primeiro mês.",
+
+  // Bloco 4: Audiência, Vitrine e Autoridade (Simples e Direto)
+  "Filtro de Qualidade de Audiência": "O número de seguidores está subindo, mas ninguém comenta ou vê meus Stories. Estamos atraindo pessoas de verdade que gostam do meu conteúdo ou só 'perfis vazios' para inflar o número?",
+  "Teto de Descoberta": "Sempre que investimos mais para crescer, o seguidor fica muito mais caro. Nossa conta está bagunçada ou o público que vocês escolheram é pequeno demais para a gente crescer?",
+  "Janela de Atribuição (Risco)": "Se o Instagram leva alguns dias para entender quem gosta do meu perfil, por que vocês desligam os anúncios em 24h? Não estamos impedindo a inteligência da conta de funcionar?",
+  "Estratégia de Lance às Cegas": "Eu prefiro 10 clientes do que 1000 curiosos. Estamos dizendo para o Google buscar quem realmente compra ou ele só está me entregando cliques baratos de qualquer pessoa?",
+  "Extensões e Ativos de Autoridade": "Meu anúncio no Google parece muito pequeno perto dos concorrentes. Não podemos colocar mais links, frases e informações para ele ocupar mais espaço e atrair mais gente?",
+  "Propriedade da Inteligência (Risco)": "Se eu mudar de agência amanhã, eu perco a lista de todas as pessoas que já visitaram meu perfil ou site? Quero ter certeza que essa inteligência é minha e está na minha conta.",
+  "Atribuição Forense (Risco)": "Eu não sei qual vídeo ou post gerou a venda de hoje. Como vamos saber onde colocar mais dinheiro se não temos um rastreio que me diga exatamente de onde veio o cliente?",
+  "Velocidade da Vitrine": "Meus links demoram muito para abrir no celular. Quantas pessoas estão desistindo no meio do caminho por causa dessa lentidão? Como isso afeta o preço do meu anúncio?",
+  "Visão de LTV (Risco)": "Vocês olham se o cliente que vocês trazem volta a comprar de mim depois? Eu quero atrair pessoas que se tornem clientes fiéis, e não gente que compra uma vez e some.",
+  "Feedback Loop de Parcerias": "Meus vídeos que funcionam bem no meu perfil não estão sendo usados nos anúncios. Por que vocês não aproveitam o que eu já sei que o meu público gosta para vender mais?",
+
+  // Pontos adicionais do questionário
+  "Alinhamento de Vendas (Feedback Loop)": "Vocês sabem quais leads fecharam e quais não fazem sentido? Sem esse retorno, como vamos parar de pagar por público que nunca compra?",
+  "Janela de Atribuição de Influência": "Estamos medindo só o último clique ou também quem apresentou a marca? Como vamos investir certo se a influência do topo nunca entra na conta?",
+};
+
+
 const ActionableInsights = ({ risks }) => {
     if (risks.length === 0) return null;
 
-    const getActionableQuestion = (title: string) => {
-        const questionMap: Record<string, string> = {
-            // Bloco 1: E-commerce e Gestão (Simples e Direto)
-            "Consistência de Dados": "No seu relatório as vendas estão ótimas, mas no meu banco caiu muito menos. Por que o rastreio de vocês está tão longe da minha realidade?",
-            "Teto de Escala": "Sempre que eu peço para investir mais, o lucro some porque a venda fica cara demais. A conta está mal organizada ou chegamos no teto?",
-            "Vida Útil do Criativo": "Vocês pedem vídeo novo toda semana dizendo que o público cansou. O problema é o vídeo ou vocês não estão testando títulos e textos diferentes para o mesmo vídeo?",
-            "Qualidade do Carrinho": "Tem muita gente colocando produto no carrinho e não comprando. Os anúncios estão atraindo compradores de verdade ou só gente curiosa que não tem dinheiro?",
-            "Re-compra Inexistente": "Eu e meus clientes estamos vendo nossos próprios anúncios de venda. Por que estou pagando para anunciar para quem já é meu cliente em vez de buscar gente nova?",
-            "Canibalização de Marca": "A maioria das vendas do Google vem de quem digitou o nome da minha loja. Eu não estou pagando por um cliente que já ia me achar de graça no orgânico?",
-            "Lixo em Termos de Busca": "Vi que estamos aparecendo para palavras como 'grátis' ou 'vagas de emprego'. Por que estamos jogando dinheiro fora com esses cliques que não compram?",
-            "Ponto Cego da PMax": "Onde exatamente nossos anúncios estão aparecendo? Não quero meu dinheiro indo para sites de fofoca ou aplicativos de jogos infantis.",
-            "Eficiência de Margem": "O faturamento no relatório está alto, mas no final do mês não sobra dinheiro. Podemos ajustar os anúncios para focar em lucro real e não só em volume de vendas?",
-            "Saúde do Merchant Center": "Notei que vários produtos estão fora do ar no Google Shopping por erro técnico. Quem está cuidando para que o anúncio não pare por bobeira de preço ou estoque?",
-            "Propriedade de Dados (Sequestro de Ativos)": "Se a gente parar de trabalhar hoje, as contas de anúncios e todo o histórico ficam comigo ou estão no nome da agência? Quero ter certeza que o acesso é meu.",
-            "Propriedade Intelectual": "Se a gente parar de trabalhar hoje, as contas de anúncios e todo o histórico ficam comigo ou estão no nome da agência? Quero ter certeza que o acesso é meu.",
-            "Taxonomia de UTMs": "Quando sai uma venda aqui, eu não consigo saber de qual anúncio ela veio. Por que o rastreio não está configurado para me mostrar o que funciona?",
-            "Ponto Cego na Gestão": "Quando sai uma venda aqui, eu não consigo saber de qual anúncio ela veio. Por que o rastreio não está configurado para me mostrar o que funciona?",
-            "Latência de Carregamento": "Sinto o site lento no celular. O quanto essa demora está fazendo eu perder vendas e deixando o anúncio mais caro para mim?",
-            "Janela de Lucro": "Vocês desligam anúncios que não venderam em 24 horas. O cliente não leva alguns dias para decidir? Não estamos matando anúncios que dariam lucro depois?",
-            "Sincronia de Estoque": "Gastamos dinheiro anunciando um produto que já tinha acabado no estoque. Como vocês garantem que o anúncio pare na hora que o produto acabar?",
-
-            // Bloco 2: Serviços, Leads e Performance (Simples e Direto)
-            "Sincronia de Leads": "No Facebook diz que chegaram 100 leads, mas no meu WhatsApp só apareceram 60. Para onde foram os outros? Tem algum erro de ligação entre os sistemas?",
-            "O Medo da Escala": "Por que o preço de cada lead dobra quando tentamos investir mais? O nosso público é tão pequeno assim ou a conta está desorganizada e sobreposta?",
-            "Fadiga de Abordagem": "Vocês dizem que o vídeo cansou, mas a mensagem é sempre a mesma. Não devíamos testar uma conversa ou oferta diferente antes de eu gastar tempo gravando tudo de novo?",
-            "Filtro de Curiosos": "Estão chegando muitos 'curiosos' que só fazem perder meu tempo. Podemos colocar alguma pergunta ou filtro no anúncio para barrar quem não tem perfil de compra?",
-            "Omissão de CRM": "Vocês sabem quais dos leads que vocês enviaram realmente fecharam contrato? Como vocês melhoram os anúncios se não sabem quem me deu lucro de verdade?",
-            "Leads 'Zumbis'": "Muitos leads do Google dizem que 'não preencheram nada'. Estamos aparecendo para quem quer coisa grátis ou para quem realmente quer contratar meu serviço?",
-            "Sequestro de Marca": "Estou pagando para aparecer quando buscam meu nome. Se eu parar, o cliente não me acharia no link gratuito logo abaixo? Não estamos jogando dinheiro fora com quem já me conhece?",
-            "Ponto Cego da Rede de Display": "Vi meu anúncio em um site de joguinhos e em canais infantis no YouTube. Por que meu dinheiro está indo para lá se o meu cliente é um adulto/decisor?",
-            "Estratégia de Lance Cega": "Estamos focados em 'ganhar cliques' ou em 'ganhar clientes'? De que adianta ter mil acessos no site se ninguém me chama no WhatsApp no final do dia?",
-            "Abismo da Página de Destino": "Se o problema de não vender é o meu site, por que vocês não me avisaram antes? O que exatamente eu preciso mudar na página para o anúncio de vocês funcionar?",
-            "Alinhamento de Vendas (Feedback Loop)": "Quando vamos sentar para eu te falar quais leads foram bons? Vocês precisam saber quem comprou para parar de gastar com o público que não fecha negócio.",
-            "Origem da Venda (Atribuição)": "Fechei um contrato ótimo hoje, mas não sei qual anúncio trouxe esse cliente. Como vamos investir mais no que funciona se não temos esse rastreio configurado?",
-            "Propriedade de Ativos (Risco)": "As contas de anúncios e o 'Pixel' estão no meu e-mail ou no de vocês? Quero garantir que, se a gente parar de trabalhar, o histórico de inteligência continue comigo.",
-            "Propriedade de Ativos (Sequestro)": "As contas de anúncios e o 'Pixel' estão no meu e-mail ou no de vocês? Quero garantir que, se a gente parar de trabalhar, o histórico de inteligência continue comigo.",
-            "Velocidade e Latência": "Minha página de vendas demora para abrir no celular. Quantos clientes estamos perdendo no meio do caminho e quanto isso está encarecendo o meu anúncio?",
-            "Métrica de Sobrevivência (CAC)": "Vocês sabem até quanto eu posso pagar por um cliente para eu não ter prejuízo no final do mês? Como vocês controlam os lances sem saber a minha margem?",
-
-            // Bloco 3: Infoprodutos, Assinaturas e Eventos (Simples e Direto)
-            "Estresse de Escala": "Sempre que tento investir mais para vender mais ingressos/vagas, o custo por venda dispara. Nossa conta está organizada para crescer ou estamos apenas saturando o mesmo público?",
-            "Eficiência de Remarketing": "Por que meus alunos ou assinantes ativos continuam vendo anúncios para comprar o que já têm? Não estamos jogando dinheiro fora por não excluir essas pessoas?",
-            "Fadiga de Ângulo": "Vocês estão apenas trocando a imagem ou estão testando novos motivos para a pessoa comprar? Mudar só a cor do botão não vai convencer quem ainda não comprou.",
-            "Janela de Decisão": "Vocês desligam anúncios que não venderam em 24h. Mas o cliente não leva uns dias para decidir assinar? Não estamos matando anúncios que trariam lucro depois?",
-            "Sinal de Conversão": "O Facebook sabe quem realmente pagou no PIX ou Boleto? Se ele só vê o clique no checkout e não o dinheiro no banco, ele vai continuar me trazendo quem não paga.",
-            "Poluição de Intenção": "Meus anúncios estão aparecendo para quem busca 'de graça' ou 'pirata'. Por que não bloqueamos essas palavras para parar de dar dinheiro para quem nunca vai pagar?",
-            "Sequestro de Tráfego de Marca": "Quase todas as vendas do Google vêm de quem já buscou pelo nome do meu curso. Por que estou pagando por esse cliente se ele já me conhecia e ia me achar de qualquer jeito?",
-            "Sequestro de Tráfego de Marca (Cegueira)": "Quase todas as vendas do Google vêm de quem já buscou pelo nome do meu curso. Por que estou pagando por esse cliente se ele já me conhecia e ia me achar de qualquer jeito?",
-            "Ponto Cego do YouTube e Display": "Vi meu anúncio de curso em vídeo de criancinha no YouTube. Criança não tem cartão de crédito. Como fazemos para meu dinheiro parar de vazar para esses canais?",
-            "Qualidade de Inscritos (OCI)": "Temos muitos inscritos 'grátis', mas ninguém vira aluno pago. Como estamos avisando ao Google para parar de buscar 'caçadores de brinde' e focar em quem tem dinheiro?",
-            "Estratégia de Lance em Picos": "Nos dias de encerramento, o custo por venda sobe tanto que o lucro some. Por que não colocamos um limite de preço para o Google não dar lances malucos no leilão?",
-            "Propriedade da Inteligência": "Se eu mudar de agência, eu perco as listas de quem visitou meu site ou se inscreveu nos eventos? Quem é o dono dessa 'inteligência' toda, eu ou vocês?",
-            "Atribuição de Jornada": "A venda veio do primeiro vídeo que a pessoa viu ou só do anúncio de 'última chance'? Se a gente não souber o caminho todo, vamos acabar pausando o que traz gente nova.",
-            "Saúde Técnica do Checkout": "A página de pagamento está demorando para abrir no celular. Vocês já testaram isso? Estou pagando pelo clique e perdendo o aluno no último segundo por causa de lentidão.",
-            "Estratégia de Equity (LTV/CAC)": "Vocês sabem quanto tempo um assinante fica pagando antes de cancelar? Quero anúncios que tragam clientes fiéis, e não gente que assina e sai no primeiro mês.",
-            "Resiliência de Sinais (Risco)": "Ouvi dizer que se o rastreio não for de alta qualidade, perdemos 30% dos dados de venda. Como está a 'nota' de qualidade dos nossos dados hoje?",
-            "Resiliência de Sinais (CAPI)": "Ouvi dizer que se o rastreio não for de alta qualidade, perdemos 30% dos dados de venda. Como está a 'nota' de qualidade dos nossos dados hoje?",
-            "Qualidade da Base e Retenção": "Vocês sabem quanto tempo um assinante fica pagando antes de cancelar? Quero anúncios que tragam clientes fiéis, e não gente que assina e sai no primeiro mês.",
-            "Janela de Decisão (Risco)": "Vocês desligam anúncios que não venderam em 24h. Mas o cliente não leva uns dias para decidir assinar? Não estamos matando anúncios que trariam lucro depois?",
-
-            // Bloco 4: Audiência, Vitrine e Autoridade (Simples e Direto)
-            "Filtro de Qualidade de Audiência": "O número de seguidores está subindo, mas ninguém comenta ou vê meus Stories. Estamos atraindo pessoas de verdade que gostam do meu conteúdo ou só 'perfis vazios' para inflar o número?",
-            "Teto de Descoberta": "Sempre que investimos mais para crescer, o seguidor fica muito mais caro. Nossa conta está bagunçada ou o público que vocês escolheram é pequeno demais para a gente crescer?",
-            "Fadiga de Criativos": "Vocês pedem vídeos novos quase todo dia. O problema é o meu vídeo ou vocês não estão testando textos e títulos diferentes para o mesmo vídeo antes de descartar?",
-            "Ponto Cego do YouTube e Display (Social)": "Quero que meus anúncios apareçam só no Instagram e Facebook. Podemos tirar nosso dinheiro de sites e aplicativos de joguinhos onde as pessoas clicam sem querer?",
-            "Janela de Atribuição (Risco)": "Se o Instagram leva alguns dias para entender quem gosta do meu perfil, por que vocês desligam os anúncios em 24h? Não estamos impedindo a inteligência da conta de funcionar?",
-            "Sequestro de Marca (Risco)": "Estamos pagando para aparecer para quem já digita meu nome no Google. Essas pessoas não me achariam de graça no link logo abaixo? Por que gastar com quem já me conhece?",
-            "Higiene de Termos de Busca": "Vi que estamos pagando por cliques de quem busca 'coisa grátis' ou 'PDF'. Como vocês estão limpando essas palavras para eu parar de dar dinheiro para quem não quer comprar?",
-            "Estratégia de Lance às Cegas": "Eu prefiro 10 clientes do que 1000 curiosos. Estamos dizendo para o Google buscar quem realmente compra ou ele só está me entregando cliques baratos de qualquer pessoa?",
-            "Extensões e Ativos de Autoridade": "Meu anúncio no Google parece muito pequeno perto dos concorrentes. Não podemos colocar mais links, frases e informações para ele ocupar mais espaço e atrair mais gente?",
-            "Propriedade da Inteligência (Risco)": "Se eu mudar de agência amanhã, eu perco a lista de todas as pessoas que já visitaram meu perfil ou site? Quero ter certeza que essa inteligência é minha e está na minha conta.",
-            "Atribuição Forense (Risco)": "Eu não sei qual vídeo ou post gerou a venda de hoje. Como vamos saber onde colocar mais dinheiro se não temos um rastreio que me diga exatamente de onde veio o cliente?",
-            "Atribuição Forense (UTMs)": "Eu não sei qual vídeo ou post gerou a venda de hoje. Como vamos saber onde colocar mais dinheiro se não temos um rastreio que me diga exatamente de onde veio o cliente?",
-            "Velocidade da Vitrine": "Meus links demoram muito para abrir no celular. Quantas pessoas estão desistindo no meio do caminho por causa dessa lentidão? Como isso afeta o preço do meu anúncio?",
-            "Visão de LTV (Risco)": "Vocês olham se o cliente que vocês trazem volta a comprar de mim depois? Eu quero atrair pessoas que se tornem clientes fiéis, e não gente que compra uma vez e some.",
-            "Visão de Valor de Vida (LTV)": "Vocês olham se o cliente que vocês trazem volta a comprar de mim depois? Eu quero atrair pessoas que se tornem clientes fiéis, e não gente que compra uma vez e some.",
-            "Feedback Loop (Risco)": "Meus vídeos que funcionam bem no meu perfil não estão sendo usados nos anúncios. Por que vocês não aproveitam o que eu já sei que o meu público gosta para vender mais?",
-            "Feedback Loop de Parcerias": "Meus vídeos que funcionam bem no meu perfil não estão sendo usados nos anúncios. Por que vocês não aproveitam o que eu já sei que o meu público gosta para vender mais?",
-        };
-        return questionMap[title] || `Como podemos melhorar nossa abordagem em relação a '${title}' para otimizar os resultados?`;
-    };
+    const getActionableQuestion = (title: string) =>
+        actionableQuestionMap[title] || `Como podemos melhorar nossa abordagem em relação a '${title}' para otimizar os resultados?`;
 
     return (
         <section>
